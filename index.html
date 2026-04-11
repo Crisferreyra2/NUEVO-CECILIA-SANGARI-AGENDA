@@ -1625,8 +1625,7 @@
           <input type="text" class="ag-input" id="ag-telefono" placeholder="+54 9 ...">
         </div>
 
-        <div class="ag-form-grid">
-          <div class="ag-group">
+        <div class="ag-group">
             <label class="ag-label">Servicio</label>
             <select class="ag-select" id="ag-servicio">
               <option value="">— Elegí un servicio —</option>
@@ -1638,15 +1637,6 @@
               <option>Podología</option>
             </select>
           </div>
-          <div class="ag-group">
-            <label class="ag-label">Duración estimada</label>
-            <select class="ag-select" id="ag-duracion">
-              <option value="30">30 min</option>
-              <option value="60" selected>1 hora</option>
-              <option value="90">1h 30min</option>
-            </select>
-          </div>
-        </div>
 
         <div class="ag-group">
           <label class="ag-label">Fecha</label>
@@ -1928,323 +1918,356 @@ document.querySelectorAll('a[href^="#"]').forEach(a=>{
 
   /* ════════════════════════════════════════════════
      AGENDA DE TURNOS — localStorage + WhatsApp
-     Funciona en Vercel y cualquier hosting estático
+     v3 — compatible con todos los browsers/Vercel
   ════════════════════════════════════════════════ */
   (function(){
-    const WA_CECILIA = '5493482642967';   // número de Cecilia
-    const HORARIOS = ['09:00','09:30','10:00','10:30','11:00','11:30',
-                      '12:00','12:30','14:00','14:30','15:00','15:30',
-                      '16:00','16:30','17:00','17:30'];
-    let agHora = null;
-    let agAdmin = false;
-    let agFiltro = 'todos';
-    const PASS = 'cecilia2025';
+    var WA_CECILIA = '5493482642967';
+    var PASS = 'cecilia2025';
+    var HORARIOS = ['09:00','09:30','10:00','10:30','11:00','11:30',
+                    '12:00','12:30','14:00','14:30','15:00','15:30',
+                    '16:00','16:30','17:00','17:30'];
+    var agHora = null;
+    var agAdmin = false;
+    var agFiltro = 'todos';
 
-    // ── Fecha mínima = hoy ──
-    const today = new Date().toISOString().split('T')[0];
-    const fechaEl = document.getElementById('ag-fecha');
+    // Fecha mínima hoy
+    var today = new Date().toISOString().split('T')[0];
+    var fechaEl = document.getElementById('ag-fecha');
     if(fechaEl) fechaEl.min = today;
 
-    // ── localStorage helpers ──
+    // ── Storage ──
     function loadTurnos(){
-      try{ return JSON.parse(localStorage.getItem('cs_turnos')||'[]'); }
-      catch{ return []; }
+      try{ return JSON.parse(localStorage.getItem('cs_turnos') || '[]'); }
+      catch(e){ return []; }
     }
     function saveTurnos(data){
-      localStorage.setItem('cs_turnos', JSON.stringify(data));
+      try{ localStorage.setItem('cs_turnos', JSON.stringify(data)); }
+      catch(e){ console.warn('localStorage error', e); }
     }
 
     // ── Tabs ──
     window.agTab = function(view, btn){
-      document.querySelectorAll('.ag-tab').forEach(b=>b.classList.remove('active'));
+      var tabs = document.querySelectorAll('.ag-tab');
+      for(var i=0;i<tabs.length;i++) tabs[i].classList.remove('active');
       btn.classList.add('active');
       document.getElementById('ag-view-cliente').classList.toggle('active', view==='cliente');
       document.getElementById('ag-view-admin').classList.toggle('active',  view==='admin');
-      if(view==='admin' && agAdmin) agRender();
+      if(view==='admin' && agAdmin) agRenderInternal();
     };
 
-    // ── Horarios al cambiar fecha ──
-    document.getElementById('ag-fecha').addEventListener('change', function(){
-      const fecha = this.value;
+    // ── Mostrar horarios al cambiar fecha ──
+    function cargarHorarios(){
+      var fecha = document.getElementById('ag-fecha').value;
       agHora = null;
-      const grid = document.getElementById('ag-horarios');
+      var grid = document.getElementById('ag-horarios');
       grid.innerHTML = '';
 
-      // No domingos
-      const d = new Date(fecha+'T12:00:00');
-      if(d.getDay()===0){
-        grid.innerHTML='<span style="color:var(--sub);font-size:0.82rem;grid-column:1/-1">Los domingos no hay atención. Elegí otro día 😊</span>';
+      if(!fecha) return;
+
+      // Domingos no
+      var d = new Date(fecha + 'T12:00:00');
+      if(d.getDay() === 0){
+        grid.innerHTML = '<span style="color:#8aa0b4;font-size:0.82rem;grid-column:1/-1">Los domingos no hay atención. Elegí otro día 😊</span>';
         return;
       }
 
-      const turnos = loadTurnos();
-      const dur = parseInt(document.getElementById('ag-duracion').value)||60;
-      const ocupados = turnos
-        .filter(t => t.fecha===fecha && t.estado!=='cancelado')
-        .map(t => ({ hora:t.hora, dur:parseInt(t.duracion)||60 }));
+      var turnos = loadTurnos();
+      var dur = 60;
 
-      function isOcupado(h){
-        const [hh,mm]=h.split(':').map(Number), s=hh*60+mm, e=s+dur;
-        return ocupados.some(o=>{
-          const [oh,om]=o.hora.split(':').map(Number), os=oh*60+om, oe=os+o.dur;
-          return s<oe && e>os;
-        });
+      var ocupados = [];
+      for(var i=0;i<turnos.length;i++){
+        var t = turnos[i];
+        if(t.fecha === fecha && t.estado !== 'cancelado'){
+          ocupados.push({ hora: t.hora, dur: parseInt(t.duracion) || 60 });
+        }
       }
 
-      HORARIOS.forEach(h=>{
-        const btn = document.createElement('button');
+      function isOcupado(h){
+        var p = h.split(':');
+        var s = parseInt(p[0])*60 + parseInt(p[1]);
+        var e = s + dur;
+        for(var j=0;j<ocupados.length;j++){
+          var o = ocupados[j];
+          var op = o.hora.split(':');
+          var os = parseInt(op[0])*60 + parseInt(op[1]);
+          var oe = os + o.dur;
+          if(s < oe && e > os) return true;
+        }
+        return false;
+      }
+
+      for(var k=0;k<HORARIOS.length;k++){
+        var h = HORARIOS[k];
+        var btn = document.createElement('button');
         btn.type = 'button';
-        btn.className = 'ag-hora' + (isOcupado(h)?' ag-ocupado':'');
+        btn.className = 'ag-hora' + (isOcupado(h) ? ' ag-ocupado' : '');
         btn.textContent = h;
         if(!isOcupado(h)){
-          btn.onclick = () => {
-            document.querySelectorAll('.ag-hora').forEach(b=>b.classList.remove('ag-sel'));
-            btn.classList.add('ag-sel');
-            agHora = h;
-          };
+          (function(hora, b){
+            b.onclick = function(){
+              var btns = document.querySelectorAll('.ag-hora');
+              for(var x=0;x<btns.length;x++) btns[x].classList.remove('ag-sel');
+              b.classList.add('ag-sel');
+              agHora = hora;
+            };
+          })(h, btn);
         }
         grid.appendChild(btn);
-      });
-    });
+      }
+    }
 
-    document.getElementById('ag-duracion').addEventListener('change', ()=>{
-      const f = document.getElementById('ag-fecha').value;
-      if(f) document.getElementById('ag-fecha').dispatchEvent(new Event('change'));
-    });
+    document.getElementById('ag-fecha').addEventListener('change', cargarHorarios);
+    
 
-    // ── RESERVAR ──────────────────────────────────────────────────────
+    // ── RESERVAR ──────────────────────────────────────────
     window.agReservar = function(){
-      const nombre   = document.getElementById('ag-nombre').value.trim();
-      const telefono = document.getElementById('ag-telefono').value.trim();
-      const servicio = document.getElementById('ag-servicio').value;
-      const fecha    = document.getElementById('ag-fecha').value;
-      const duracion = document.getElementById('ag-duracion').value;
-      const notas    = document.getElementById('ag-notas').value.trim();
-      const res      = document.getElementById('ag-result');
-      const btnRes   = document.getElementById('ag-btn-reservar');
+      var nombre   = document.getElementById('ag-nombre').value.trim();
+      var telefono = document.getElementById('ag-telefono').value.trim();
+      var servicio = document.getElementById('ag-servicio').value;
+      var fecha    = document.getElementById('ag-fecha').value;
+      var duracion = '60';
+      var notas    = document.getElementById('ag-notas').value.trim();
+      var res      = document.getElementById('ag-result');
+      var btnRes   = document.getElementById('ag-btn-reservar');
 
-      res.className='ag-result'; res.style.display='none';
+      // Reset resultado
+      res.className = 'ag-result';
+      res.style.display = 'none';
+      res.innerHTML = '';
 
-      // Validar campos
+      // Validar
       if(!nombre || !telefono || !servicio || !fecha || !agHora){
-        res.className='ag-result err';
-        res.innerHTML='<div class="ag-result-title">Faltan datos</div>Completá todos los campos y elegí un horario disponible.';
-        res.style.display='block';
+        res.className = 'ag-result err';
+        res.innerHTML = '<div class="ag-result-title">Faltan datos</div>Completá todos los campos y elegí un horario disponible.';
+        res.style.display = 'block';
         return;
       }
 
       // Verificar conflicto
-      const turnos = loadTurnos();
-      const dur = parseInt(duracion);
-      const [hh,mm] = agHora.split(':').map(Number);
-      const s = hh*60+mm, e = s+dur;
+      var turnos = loadTurnos();
+      var dur = parseInt(duracion);
+      var hp = agHora.split(':');
+      var s = parseInt(hp[0])*60 + parseInt(hp[1]);
+      var e = s + dur;
+      var conflict = null;
 
-      const conflict = turnos.find(t=>{
-        if(t.fecha!==fecha || t.estado==='cancelado') return false;
-        const [oh,om]=t.hora.split(':').map(Number), os=oh*60+om, oe=os+(parseInt(t.duracion)||60);
-        return s<oe && e>os;
-      });
+      for(var i=0;i<turnos.length;i++){
+        var t = turnos[i];
+        if(t.fecha !== fecha || t.estado === 'cancelado') continue;
+        var op = t.hora.split(':');
+        var os = parseInt(op[0])*60 + parseInt(op[1]);
+        var oe = os + (parseInt(t.duracion) || 60);
+        if(s < oe && e > os){ conflict = t; break; }
+      }
 
       if(conflict){
-        const ocupadas = turnos.filter(t=>t.fecha===fecha&&t.estado!=='cancelado').map(t=>t.hora);
-        const libres = HORARIOS.filter(h=>!ocupadas.includes(h)).slice(0,5);
-        agHora=null;
-        document.querySelectorAll('.ag-hora').forEach(b=>b.classList.remove('ag-sel'));
-        res.className='ag-result err';
-        res.innerHTML=`<div class="ag-result-title">⚠️ Horario ocupado</div>
-          Ese horario ya fue reservado. Otros disponibles ese día:<br>
-          <strong style="color:var(--gold)">${libres.length ? libres.join(' · ') : 'No quedan más horarios ese día.'}</strong>`;
-        res.style.display='block';
+        var ocupadas = [];
+        for(var j=0;j<turnos.length;j++){
+          if(turnos[j].fecha===fecha && turnos[j].estado!=='cancelado') ocupadas.push(turnos[j].hora);
+        }
+        var libres = HORARIOS.filter(function(h){ return ocupadas.indexOf(h)===-1; }).slice(0,5);
+        agHora = null;
+        var btns = document.querySelectorAll('.ag-hora');
+        for(var x=0;x<btns.length;x++) btns[x].classList.remove('ag-sel');
+        res.className = 'ag-result err';
+        res.innerHTML = '<div class="ag-result-title">⚠️ Horario ocupado</div>Ese horario ya fue reservado. Otros disponibles ese día:<br><strong style="color:#c9a97a">' + (libres.length ? libres.join(' · ') : 'No quedan más horarios ese día.') + '</strong>';
+        res.style.display = 'block';
         return;
       }
 
-      // Guardar en localStorage
-      const horaConfirmada = agHora;
-      const turno = {
+      // Guardar turno
+      var horaConfirmada = agHora;
+      var turno = {
         id: Date.now().toString(),
-        nombre, telefono, servicio, fecha,
-        hora: horaConfirmada, duracion, notas,
+        nombre: nombre,
+        telefono: telefono,
+        servicio: servicio,
+        fecha: fecha,
+        hora: horaConfirmada,
+        duracion: duracion,
+        notas: notas,
         estado: 'confirmado',
         creadoEn: new Date().toISOString()
       };
       turnos.push(turno);
       saveTurnos(turnos);
 
-      // Formatear fecha en español
-      const fd = new Date(fecha+'T12:00:00').toLocaleDateString('es-AR',{weekday:'long',day:'numeric',month:'long'});
+      // Formatear fecha
+      var fechaObj = new Date(fecha + 'T12:00:00');
+      var dias = ['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
+      var meses = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+      var fd = dias[fechaObj.getDay()] + ' ' + fechaObj.getDate() + ' de ' + meses[fechaObj.getMonth()];
 
-      // Mostrar confirmación
-      res.className='ag-result ok';
-      res.innerHTML=`
-        <div class="ag-result-title">✅ ¡Turno solicitado!</div>
-        <strong>${nombre}</strong>, tu solicitud es para el<br>
-        📅 <strong>${fd}</strong> a las <strong>${horaConfirmada}hs</strong><br>
-        💆 <strong>${servicio}</strong><br><br>
-        <div style="margin-top:10px;font-size:0.85rem;color:var(--white)">
-          Para confirmar tu turno, enviá el mensaje a Cecilia:
-        </div>
-        <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:12px">
-          <a id="ag-wa-link" href="#" target="_blank" rel="noopener"
-             style="display:inline-flex;align-items:center;gap:8px;
-                    background:#25D366;color:#fff;padding:12px 20px;border-radius:4px;
-                    text-decoration:none;font-size:0.82rem;letter-spacing:0.04em;font-weight:500;flex:1;min-width:180px;justify-content:center">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.890-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
-            Enviar a Cecilia por WA
-          </a>
-          <a id="ag-gcal-link" href="#" target="_blank" rel="noopener"
-             style="display:inline-flex;align-items:center;gap:8px;
-                    background:#4285F4;color:#fff;padding:12px 20px;border-radius:4px;
-                    text-decoration:none;font-size:0.82rem;letter-spacing:0.04em;font-weight:500;flex:1;min-width:180px;justify-content:center">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11zM7 11h5v5H7z"/></svg>
-            Guardar en Google Calendar
-          </a>
-        </div>`;
-      res.style.display='block';
+      // Construir URLs
+      // WhatsApp
+      var msg = 'Hola Cecilia! Quiero reservar un turno\n\n' +
+                'Fecha: ' + fd + '\n' +
+                'Hora: ' + horaConfirmada + 'hs\n' +
+                'Servicio: ' + servicio + '\n' +
+                'Nombre: ' + nombre + '\n' +
+                'Tel: ' + telefono +
+                (notas ? '\nNota: ' + notas : '');
+      var waUrl = 'https://wa.me/' + WA_CECILIA + '?text=' + encodeURIComponent(msg);
 
-      // Armar mensaje de WhatsApp pre-completado
-      const msg = `Hola Cecilia! Quiero reservar un turno 😊\n\n` +
-                  `📅 *Fecha:* ${fd}\n` +
-                  `🕐 *Hora:* ${horaConfirmada}hs\n` +
-                  `💆 *Servicio:* ${servicio}\n` +
-                  `⏱ *Duración:* ${duracion} min\n` +
-                  `👤 *Nombre:* ${nombre}\n` +
-                  `📱 *Tel:* ${telefono}` +
-                  (notas ? `\n💬 *Nota:* ${notas}` : '');
 
-      const waUrl = `https://wa.me/${WA_CECILIA}?text=${encodeURIComponent(msg)}`;
-      document.getElementById('ag-wa-link').href = waUrl;
 
-      // ── Google Calendar link ──────────────────────────
-      // Formato fecha para GCal: YYYYMMDDTHHMMSS
-      const [fy,fm,fd2] = fecha.split('-');
-      const [gh,gm] = horaConfirmada.split(':');
-      const durMin2 = parseInt(duracion);
-      const startDt = `${fy}${fm}${fd2}T${gh}${gm}00`;
-      // Calcular fin
-      const totalMin = parseInt(gh)*60 + parseInt(gm) + durMin2;
-      const endH = String(Math.floor(totalMin/60)).padStart(2,'0');
-      const endM = String(totalMin%60).padStart(2,'0');
-      const endDt = `${fy}${fm}${fd2}T${endH}${endM}00`;
-      const gcalTitle = encodeURIComponent(`${servicio} — ${nombre}`);
-      const gcalDetails = encodeURIComponent(`Servicio: ${servicio}\nCliente: ${nombre}\nTel: ${telefono}${notas?'\nNota: '+notas:''}`);
-      const gcalLocation = encodeURIComponent('Centro de Estética Integral — San Martín 3140, Reconquista, Santa Fe');
-      const gcalUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${gcalTitle}&dates=${startDt}/${endDt}&details=${gcalDetails}&location=${gcalLocation}`;
-      document.getElementById('ag-gcal-link').href = gcalUrl;
+      // Mostrar confirmación con DOM (evitar template literals complejos)
+      res.className = 'ag-result ok';
+      var html_result = '<div class="ag-result-title">✅ ¡Turno solicitado!</div>' +
+        '<strong>' + nombre + '</strong>, tu solicitud es para el<br>' +
+        '📅 <strong>' + fd + '</strong> a las <strong>' + horaConfirmada + 'hs</strong><br>' +
+        '💆 <strong>' + servicio + '</strong><br><br>' +
+        
+        '<div style="display:flex;flex-wrap:wrap;gap:10px">' +
+          '<a href="' + waUrl + '" target="_blank" rel="noopener" ' +
+             'style="display:inline-flex;align-items:center;gap:8px;background:#25D366;color:#fff;' +
+             'padding:13px 18px;border-radius:4px;text-decoration:none;font-size:0.82rem;' +
+             'font-weight:500;flex:1;min-width:160px;justify-content:center">' +
+            '<svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.890-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>' +
+            ' Enviar a Cecilia por WA' +
+          '</a>' +
+          '<a href="' + gcalUrl + '" target="_blank" rel="noopener" ' +
+             'style="display:inline-flex;align-items:center;gap:8px;background:#4285F4;color:#fff;' +
+             'padding:13px 18px;border-radius:4px;text-decoration:none;font-size:0.82rem;' +
+             'font-weight:500;flex:1;min-width:160px;justify-content:center">' +
+            '<svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11zM7 11h5v5H7z"/></svg>' +
+            ' Guardar en Google Calendar' +
+          '</a>' +
+        '</div>';
+      res.innerHTML = html_result;
+      res.style.display = 'block';
+
+      // Scroll al resultado
+      setTimeout(function(){ res.scrollIntoView({behavior:'smooth', block:'nearest'}); }, 100);
 
       btnRes.disabled = false;
       btnRes.textContent = 'Confirmar Reserva';
 
       // Limpiar form
-      ['ag-nombre','ag-telefono','ag-notas'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
-      const sv=document.getElementById('ag-servicio'); if(sv) sv.value='';
-      const fe=document.getElementById('ag-fecha'); if(fe) fe.value='';
-      document.getElementById('ag-horarios').innerHTML=
-        '<span style="color:var(--sub);font-size:0.82rem;grid-column:1/-1">Seleccioná una fecha para ver los horarios disponibles.</span>';
-      agHora=null;
+      var ids = ['ag-nombre','ag-telefono','ag-notas'];
+      for(var c=0;c<ids.length;c++){
+        var el = document.getElementById(ids[c]);
+        if(el) el.value = '';
+      }
+      var sv = document.getElementById('ag-servicio');
+      if(sv) sv.selectedIndex = 0;
+      var fe = document.getElementById('ag-fecha');
+      if(fe) fe.value = '';
+      var gh = document.getElementById('ag-horarios');
+      if(gh) gh.innerHTML = '<span style="color:#8aa0b4;font-size:0.82rem;grid-column:1/-1">Seleccioná una fecha para ver los horarios disponibles.</span>';
+      agHora = null;
     };
 
-    // ── ADMIN — unlock ────────────────────────────────────────────────
+    // ── ADMIN unlock ──────────────────────────────────────
     window.agUnlock = function(){
-      const v = document.getElementById('ag-pass').value;
-      if(v===PASS){
-        agAdmin=true;
-        document.getElementById('ag-locked-msg').style.display='none';
-        document.getElementById('ag-admin-content').style.display='block';
-        document.getElementById('ag-lock-area').innerHTML=
-          '<span style="font-size:0.75rem;color:#7de0a8">✓ Sesión activa</span>';
-        agRender();
+      var v = document.getElementById('ag-pass').value;
+      if(v === PASS){
+        agAdmin = true;
+        document.getElementById('ag-locked-msg').style.display = 'none';
+        document.getElementById('ag-admin-content').style.display = 'block';
+        document.getElementById('ag-lock-area').innerHTML = '<span style="font-size:0.75rem;color:#7de0a8">✓ Sesión activa</span>';
+        agRenderInternal();
       } else {
-        const p=document.getElementById('ag-pass');
-        p.style.borderColor='var(--red)';
-        p.value='';
-        setTimeout(()=>{ if(p) p.style.borderColor=''; },1500);
+        var p = document.getElementById('ag-pass');
+        p.style.borderColor = '#e05c5c';
+        p.value = '';
+        setTimeout(function(){ if(p) p.style.borderColor = ''; }, 1500);
       }
     };
 
-    // ── ADMIN — filtros ───────────────────────────────────────────────
+    // ── ADMIN filtros ─────────────────────────────────────
     window.agFilter = function(f, btn){
       agFiltro = f;
-      document.querySelectorAll('.ag-filter').forEach(b=>b.classList.remove('active'));
+      var filters = document.querySelectorAll('.ag-filter');
+      for(var i=0;i<filters.length;i++) filters[i].classList.remove('active');
       btn.classList.add('active');
-      agRender();
+      agRenderInternal();
     };
 
-    // ── ADMIN — render turnos ─────────────────────────────────────────
-    function agRender(){
-      const cards = document.getElementById('ag-cards');
+    // ── ADMIN render ──────────────────────────────────────
+    function agRenderInternal(){
+      var cards = document.getElementById('ag-cards');
       if(!cards) return;
-      const all = loadTurnos();
-      const hoy = new Date().toISOString().split('T')[0];
+      var all = loadTurnos();
+      var hoy = new Date().toISOString().split('T')[0];
 
       // Stats
-      const activos = all.filter(t=>t.estado!=='cancelado');
-      const hoyN = activos.filter(t=>t.fecha===hoy).length;
-      const semN = activos.filter(t=>{
-        const d=new Date(t.fecha+'T12:00:00'), n=new Date();
-        const diff=(d-n)/86400000;
-        return diff>=-1 && diff<=7;
+      var activos = all.filter(function(t){ return t.estado !== 'cancelado'; });
+      var hoyN = activos.filter(function(t){ return t.fecha === hoy; }).length;
+      var semN = activos.filter(function(t){
+        var d = new Date(t.fecha+'T12:00:00'), n = new Date();
+        var diff = (d-n)/86400000;
+        return diff >= -1 && diff <= 7;
       }).length;
-      const stats=document.getElementById('ag-stats');
-      if(stats) stats.innerHTML=`
-        <div class="ag-stat"><div class="ag-stat-n">${activos.length}</div><div class="ag-stat-l">Total</div></div>
-        <div class="ag-stat"><div class="ag-stat-n">${hoyN}</div><div class="ag-stat-l">Hoy</div></div>
-        <div class="ag-stat"><div class="ag-stat-n">${semN}</div><div class="ag-stat-l">Esta semana</div></div>
-      `;
+      var stats = document.getElementById('ag-stats');
+      if(stats){
+        stats.innerHTML =
+          '<div class="ag-stat"><div class="ag-stat-n">'+activos.length+'</div><div class="ag-stat-l">Total</div></div>' +
+          '<div class="ag-stat"><div class="ag-stat-n">'+hoyN+'</div><div class="ag-stat-l">Hoy</div></div>' +
+          '<div class="ag-stat"><div class="ag-stat-n">'+semN+'</div><div class="ag-stat-l">Esta semana</div></div>';
+      }
 
-      // Filtrar
-      let list = all.filter(t=>t.estado!=='cancelado');
-      if(agFiltro==='hoy')
-        list = list.filter(t=>t.fecha===hoy);
-      else if(agFiltro==='semana')
-        list = list.filter(t=>{ const d=new Date(t.fecha+'T12:00:00'),n=new Date(); const diff=(d-n)/86400000; return diff>=-1&&diff<=7; });
-      else if(agFiltro==='proximos')
-        list = list.filter(t=>new Date(t.fecha+'T12:00:00')>=new Date());
+      var list = all.filter(function(t){ return t.estado !== 'cancelado'; });
+      if(agFiltro === 'hoy'){
+        list = list.filter(function(t){ return t.fecha === hoy; });
+      } else if(agFiltro === 'semana'){
+        list = list.filter(function(t){
+          var d=new Date(t.fecha+'T12:00:00'),n=new Date();
+          var diff=(d-n)/86400000;
+          return diff>=-1 && diff<=7;
+        });
+      } else if(agFiltro === 'proximos'){
+        list = list.filter(function(t){ return new Date(t.fecha+'T12:00:00') >= new Date(); });
+      }
+      list.sort(function(a,b){ return (a.fecha+a.hora).localeCompare(b.fecha+b.hora); });
 
-      list.sort((a,b)=>(a.fecha+a.hora).localeCompare(b.fecha+b.hora));
-
-      cards.innerHTML='';
+      cards.innerHTML = '';
       if(!list.length){
-        cards.innerHTML='<div class="ag-empty">📋 No hay turnos para mostrar.</div>';
+        cards.innerHTML = '<div class="ag-empty">📋 No hay turnos para mostrar.</div>';
         return;
       }
 
-      list.forEach(t=>{
-        const fd=new Date(t.fecha+'T12:00:00').toLocaleDateString('es-AR',{weekday:'short',day:'numeric',month:'short'});
-        const c=document.createElement('div');
-        c.className='ag-card';
-        c.innerHTML=`
-          <div>
-            <div class="ag-card-fecha">${fd}</div>
-            <div class="ag-card-svc">${t.servicio}</div>
-            <div class="ag-card-client">👤 ${t.nombre} &nbsp;·&nbsp; 📱 ${t.telefono}</div>
-            ${t.notas?`<div class="ag-card-client" style="margin-top:3px;font-style:italic">💬 ${t.notas}</div>`:''}
-            <button class="ag-btn-cancel" onclick="agCancelar('${t.id}')">✕ Cancelar</button>
-          </div>
-          <div>
-            <div class="ag-card-hora">${t.hora}</div>
-            <div class="ag-card-badge">Confirmado</div>
-            <div class="ag-card-dur">${t.duracion} min</div>
-          </div>`;
-        cards.appendChild(c);
-      });
-    }
-    window.agRender = agRender;
+      var dias2 = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+      var meses2 = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
 
-    // ── ADMIN — cancelar ──────────────────────────────────────────────
+      for(var i=0;i<list.length;i++){
+        var t = list[i];
+        var fd2 = new Date(t.fecha+'T12:00:00');
+        var fdStr = dias2[fd2.getDay()] + ' ' + fd2.getDate() + ' ' + meses2[fd2.getMonth()];
+        var c = document.createElement('div');
+        c.className = 'ag-card';
+        c.innerHTML =
+          '<div>' +
+            '<div class="ag-card-fecha">' + fdStr + '</div>' +
+            '<div class="ag-card-svc">' + t.servicio + '</div>' +
+            '<div class="ag-card-client">👤 ' + t.nombre + ' &nbsp;·&nbsp; 📱 ' + t.telefono + '</div>' +
+            (t.notas ? '<div class="ag-card-client" style="margin-top:3px;font-style:italic">💬 ' + t.notas + '</div>' : '') +
+            '<button class="ag-btn-cancel" onclick="agCancelar(\'' + t.id + '\')">✕ Cancelar</button>' +
+          '</div>' +
+          '<div>' +
+            '<div class="ag-card-hora">' + t.hora + '</div>' +
+            '<div class="ag-card-badge">Confirmado</div>' +
+
+          '</div>';
+        cards.appendChild(c);
+      }
+    }
+    window.agRender = agRenderInternal;
+
+    // ── ADMIN cancelar ────────────────────────────────────
     window.agCancelar = function(id){
       if(!confirm('¿Cancelar este turno?')) return;
-      const all = loadTurnos();
-      const t = all.find(x=>x.id===id);
-      if(t) t.estado='cancelado';
+      var all = loadTurnos();
+      for(var i=0;i<all.length;i++){
+        if(all[i].id === id){ all[i].estado = 'cancelado'; break; }
+      }
       saveTurnos(all);
-      agRender();
+      agRenderInternal();
     };
 
   })();
 
-  })();
-
-  // ── Abrir agenda y opcionalmente pre-seleccionar servicio ──
+    // ── Abrir agenda y opcionalmente pre-seleccionar servicio ──
   function abrirAgenda(servicio){
     // Scroll suave a la sección
     const sec = document.getElementById('agenda');
