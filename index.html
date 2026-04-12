@@ -1675,12 +1675,7 @@
 
         <div id="ag-admin-content" style="display:none">
           <div class="ag-stats" id="ag-stats"></div>
-          <div style="margin-bottom:16px">
-            <button onclick="descargarExcelManual()" style="display:inline-flex;align-items:center;gap:8px;background:rgba(176,148,106,0.15);border:1px solid rgba(176,148,106,0.4);color:#c9a97a;padding:10px 18px;border-radius:4px;cursor:pointer;font-family:var(--font-b);font-size:0.78rem;letter-spacing:0.08em;transition:all 0.2s" onmouseover="this.style.background='rgba(176,148,106,0.25)'" onmouseout="this.style.background='rgba(176,148,106,0.15)'">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-              Descargar Excel con todos los turnos
-            </button>
-          </div>
+
           <div class="ag-filters">
             <button class="ag-filter active" onclick="agFilter('todos',this)">Todos</button>
             <button class="ag-filter" onclick="agFilter('hoy',this)">Hoy</button>
@@ -1770,12 +1765,12 @@
 <div class="toast" id="toast"></div>
 
 <script>
-// ─── ANIMATED PARTICLE BACKGROUND ───
+// --- ANIMATED PARTICLE BACKGROUND ---
 (function(){
-  const canvas = document.getElementById('bg-canvas');
-  const ctx = canvas.getContext('2d');
-  let W, H, particles = [], lines = [];
-  const COLORS = ['rgba(106,144,176,', 'rgba(154,188,212,', 'rgba(176,148,106,'];
+  var canvas = document.getElementById('bg-canvas');
+  var ctx = canvas.getContext('2d');
+  var W, H, particles = [], lines = [];
+  var COLORS = ['rgba(106,144,176,', 'rgba(154,188,212,', 'rgba(176,148,106,'];
 
   function resize(){
     W = canvas.width = window.innerWidth;
@@ -1803,7 +1798,7 @@
   };
 
   Particle.prototype.draw = function(){
-    const a = this.alpha * (0.7 + 0.3*Math.sin(this.pulse));
+    var a = this.alpha * (0.7 + 0.3*Math.sin(this.pulse));
     ctx.beginPath();
     ctx.arc(this.x, this.y, this.r, 0, Math.PI*2);
     ctx.fillStyle = this.color + a + ')';
@@ -1813,18 +1808,18 @@
   function init(){
     resize();
     particles = [];
-    const count = Math.min(120, Math.floor(W * H / 14000));
-    for(let i = 0; i < count; i++) particles.push(new Particle());
+    var count = Math.min(120, Math.floor(W * H / 14000));
+    for(var i = 0; i < count; i++) particles.push(new Particle());
   }
 
   function drawConnections(){
-    for(let i = 0; i < particles.length; i++){
-      for(let j = i+1; j < particles.length; j++){
-        const dx = particles[i].x - particles[j].x;
-        const dy = particles[i].y - particles[j].y;
-        const dist = Math.sqrt(dx*dx + dy*dy);
+    for(var i = 0; i < particles.length; i++){
+      for(var j = i+1; j < particles.length; j++){
+        var dx = particles[i].x - particles[j].x;
+        var dy = particles[i].y - particles[j].y;
+        var dist = Math.sqrt(dx*dx + dy*dy);
         if(dist < 130){
-          const alpha = (1 - dist/130) * 0.12;
+          var alpha = (1 - dist/130) * 0.12;
           ctx.beginPath();
           ctx.moveTo(particles[i].x, particles[i].y);
           ctx.lineTo(particles[j].x, particles[j].y);
@@ -1837,21 +1832,21 @@
   }
 
   // Subtle gradient nebula
-  let nebulaAngle = 0;
+  var nebulaAngle = 0;
   function drawNebula(){
     nebulaAngle += 0.001;
-    const cx = W * 0.6 + Math.sin(nebulaAngle) * 80;
-    const cy = H * 0.35 + Math.cos(nebulaAngle * 0.7) * 60;
-    const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, 400);
+    var cx = W * 0.6 + Math.sin(nebulaAngle) * 80;
+    var cy = H * 0.35 + Math.cos(nebulaAngle * 0.7) * 60;
+    var grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, 400);
     grad.addColorStop(0, 'rgba(106,144,176,0.035)');
     grad.addColorStop(0.5, 'rgba(61,80,104,0.02)');
     grad.addColorStop(1, 'rgba(0,0,0,0)');
     ctx.fillStyle = grad;
     ctx.fillRect(0,0,W,H);
 
-    const cx2 = W * 0.2 + Math.sin(nebulaAngle*0.8+1) * 60;
-    const cy2 = H * 0.7 + Math.cos(nebulaAngle*0.5+2) * 50;
-    const grad2 = ctx.createRadialGradient(cx2, cy2, 0, cx2, cy2, 300);
+    var cx2 = W * 0.2 + Math.sin(nebulaAngle*0.8+1) * 60;
+    var cy2 = H * 0.7 + Math.cos(nebulaAngle*0.5+2) * 50;
+    var grad2 = ctx.createRadialGradient(cx2, cy2, 0, cx2, cy2, 300);
     grad2.addColorStop(0, 'rgba(176,148,106,0.025)');
     grad2.addColorStop(1, 'rgba(0,0,0,0)');
     ctx.fillStyle = grad2;
@@ -1861,7 +1856,7 @@
   function animate(){
     ctx.clearRect(0,0,W,H);
     // deep bg gradient
-    const bg = ctx.createLinearGradient(0,0,W,H);
+    var bg = ctx.createLinearGradient(0,0,W,H);
     bg.addColorStop(0,'rgba(10,21,32,1)');
     bg.addColorStop(0.5,'rgba(13,26,40,1)');
     bg.addColorStop(1,'rgba(10,21,32,1)');
@@ -1879,53 +1874,55 @@
   animate();
 })();
 
-// ─── NAV SCROLL ───
-const nav = document.getElementById('nav');
+// --- NAV SCROLL ---
+var nav = document.getElementById('nav');
 window.addEventListener('scroll', ()=> nav.classList.toggle('scrolled', scrollY > 60));
 
-// ─── MOBILE MENU ───
+// --- MOBILE MENU ---
 function openMenu(){ document.getElementById('mobileMenu').classList.add('open'); document.body.style.overflow='hidden'; }
 function closeMenu(){ document.getElementById('mobileMenu').classList.remove('open'); document.body.style.overflow=''; }
 
-// ─── REVEAL ───
-const revEls = document.querySelectorAll('.rev');
-const obs = new IntersectionObserver(entries=>{
+// --- REVEAL ---
+var revEls = document.querySelectorAll('.rev');
+var obs = new IntersectionObserver(entries=>{
   entries.forEach(e=>{ if(e.isIntersecting) e.target.classList.add('vis'); });
 }, {threshold:0.1});
 revEls.forEach(el=>obs.observe(el));
 
-// ─── FORM ───
+// --- FORM ---
 function handleForm(e){
   e.preventDefault();
-  const n = document.getElementById('nombre').value;
-  const t = document.getElementById('tel').value;
-  const s = document.getElementById('servicio').value;
-  const m = document.getElementById('mensaje').value;
-  const txt = `Hola Cecilia, me llamo *${n}* y me interesa *${s}*.${t?' Mi contacto es '+t+'.':''}${m?' '+m:''} ¿Tenés disponibilidad?`;
-  window.open(`https://wa.me/5493482642967?text=${encodeURIComponent(txt)}`, '_blank');
+  var n = document.getElementById('nombre').value;
+  var t = document.getElementById('tel').value;
+  var sv = document.getElementById('servicio').value;
+  var m = document.getElementById('mensaje').value;
+  var txt = 'Hola Cecilia, me llamo *' + n + '* y me interesa *' + sv + '*.' +
+            (t ? ' Mi contacto es ' + t + '.' : '') +
+            (m ? ' ' + m : '') +
+            ' Tenes disponibilidad?';
+  window.open('https://wa.me/5493482642967?text=' + encodeURIComponent(txt), '_blank');
   showToast('Redirigiendo a WhatsApp...');
   e.target.reset();
 }
-
 function showToast(msg){
-  const t = document.getElementById('toast');
+  var t = document.getElementById('toast');
   t.textContent = msg;
   t.classList.add('show');
   setTimeout(()=>t.classList.remove('show'), 3000);
 }
 
-// ─── SMOOTH SCROLL ───
+// --- SMOOTH SCROLL ---
 document.querySelectorAll('a[href^="#"]').forEach(a=>{
   a.addEventListener('click', e=>{
-    const el = document.querySelector(a.getAttribute('href'));
+    var el = document.querySelector(a.getAttribute('href'));
     if(el){ e.preventDefault(); el.scrollIntoView({behavior:'smooth'}); }
   });
 });
 
-  /* ════════════════════════════════════════════════
-     AGENDA DE TURNOS — localStorage + WhatsApp
-     v3 — compatible con todos los browsers/Vercel
-  ════════════════════════════════════════════════ */
+  /* ================================================
+     AGENDA DE TURNOS - localStorage + WhatsApp
+     v3 - compatible con todos los browsers/Vercel
+  ================================================ */
   (function(){
     var WA_CECILIA = '5493482642967';
     var PASS = 'cecilia2025';
@@ -1941,7 +1938,7 @@ document.querySelectorAll('a[href^="#"]').forEach(a=>{
     var fechaEl = document.getElementById('ag-fecha');
     if(fechaEl) fechaEl.min = today;
 
-    // ── Storage ──
+    // -- Storage --
     function loadTurnos(){
       try{ return JSON.parse(localStorage.getItem('cs_turnos') || '[]'); }
       catch(e){ return []; }
@@ -1951,7 +1948,7 @@ document.querySelectorAll('a[href^="#"]').forEach(a=>{
       catch(e){ console.warn('localStorage error', e); }
     }
 
-    // ── Tabs ──
+    // -- Tabs --
     window.agTab = function(view, btn){
       var tabs = document.querySelectorAll('.ag-tab');
       for(var i=0;i<tabs.length;i++) tabs[i].classList.remove('active');
@@ -1961,7 +1958,7 @@ document.querySelectorAll('a[href^="#"]').forEach(a=>{
       if(view==='admin' && agAdmin) agRenderInternal();
     };
 
-    // ── Mostrar horarios al cambiar fecha ──
+    // -- Mostrar horarios al cambiar fecha --
     function cargarHorarios(){
       var fecha = document.getElementById('ag-fecha').value;
       agHora = null;
@@ -1973,7 +1970,7 @@ document.querySelectorAll('a[href^="#"]').forEach(a=>{
       // Domingos no
       var d = new Date(fecha + 'T12:00:00');
       if(d.getDay() === 0){
-        grid.innerHTML = '<span style="color:#8aa0b4;font-size:0.82rem;grid-column:1/-1">Los domingos no hay atención. Elegí otro día 😊</span>';
+        grid.innerHTML = '<span style="color:#8aa0b4;font-size:0.82rem;grid-column:1/-1">Los domingos no hay atención. Elegí otro día :)</span>';
         return;
       }
 
@@ -2025,8 +2022,8 @@ document.querySelectorAll('a[href^="#"]').forEach(a=>{
     document.getElementById('ag-fecha').addEventListener('change', cargarHorarios);
     
 
-    // ── RESERVAR ──────────────────────────────────────────
-    // URL del Google Apps Script (Cecilia debe configurarla — ver instrucciones)
+    // -- RESERVAR ------------------------------------------
+    // URL del Google Apps Script (Cecilia debe configurarla - ver instrucciones)
     window.agReservar = function(){
       var nombre   = document.getElementById('ag-nombre').value.trim();
       var telefono = document.getElementById('ag-telefono').value.trim();
@@ -2075,7 +2072,7 @@ document.querySelectorAll('a[href^="#"]').forEach(a=>{
         var btns2 = document.querySelectorAll('.ag-hora');
         for(var x=0;x<btns2.length;x++) btns2[x].classList.remove('ag-sel');
         res.className = 'ag-result err';
-        res.innerHTML = '<div class="ag-result-title">⚠️ Horario ocupado</div>Ese horario ya fue reservado. Otros disponibles ese día:<br><strong style="color:#c9a97a">' + (libres.length ? libres.join(' · ') : 'No quedan más horarios ese día.') + '</strong>';
+        res.innerHTML = '<div class="ag-result-title">Horario ocupado</div>Ese horario ya fue reservado. Otros disponibles ese día:<br><strong style="color:#c9a97a">' + (libres.length ? libres.join(' . ') : 'No quedan más horarios ese día.') + '</strong>';
         res.style.display = 'block';
         return;
       }
@@ -2099,9 +2096,6 @@ document.querySelectorAll('a[href^="#"]').forEach(a=>{
       var meses = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
       var fd = dias[fechaObj.getDay()] + ' ' + fechaObj.getDate() + ' de ' + meses[fechaObj.getMonth()];
 
-      // ── Generar y descargar Excel con TODOS los turnos ──
-      descargarExcel(turnos);
-
       // Mostrar confirmación con botón WA
       var msg = 'Hola Cecilia! Quiero reservar un turno\n\n' +
                 'Fecha: ' + fd + '\n' +
@@ -2114,18 +2108,12 @@ document.querySelectorAll('a[href^="#"]').forEach(a=>{
 
       res.className = 'ag-result ok';
       res.innerHTML =
-        '<div class="ag-result-title">✅ ¡Turno confirmado!</div>' +
-        '<strong>' + nombre + '</strong>, tu turno es el<br>' +
-        '📅 <strong>' + fd + '</strong> a las <strong>' + horaConfirmada + 'hs</strong><br>' +
-        '💆 <strong>' + servicio + '</strong><br>' +
-        '<div style="font-size:0.8rem;color:#7de0a8;margin:10px 0 4px">✓ La agenda fue descargada automáticamente</div>' +
-        '<a href="' + waUrl + '" target="_blank" rel="noopener" ' +
-        'style="display:inline-flex;align-items:center;gap:10px;background:#25D366;color:#fff;' +
-        'padding:14px 20px;border-radius:4px;text-decoration:none;font-size:0.9rem;' +
-        'font-weight:500;width:100%;justify-content:center;margin-top:8px;box-sizing:border-box">' +
-        '<svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.890-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>' +
-        ' Enviar notificación por WhatsApp' +
-        '</a>';
+        '<div class="ag-result-title">Turno confirmado</div>' +
+        '<p style="margin:8px 0"><strong>' + nombre + '</strong></p>' +
+        '<p style="margin:4px 0">Fecha: <strong>' + fd + '</strong></p>' +
+        '<p style="margin:4px 0">Hora: <strong>' + horaConfirmada + 'hs</strong></p>' +
+        '<p style="margin:4px 0">Servicio: <strong>' + servicio + '</strong></p>' +
+        '<p style="font-size:0.8rem;color:#7de0a8;margin-top:12px">Tu reserva fue registrada. Cecilia te va a contactar para confirmar.</p>';
       res.style.display = 'block';
       setTimeout(function(){ res.scrollIntoView({behavior:'smooth', block:'nearest'}); }, 100);
 
@@ -2142,14 +2130,14 @@ document.querySelectorAll('a[href^="#"]').forEach(a=>{
       agHora=null;
     };
 
-    // ── ADMIN unlock ──────────────────────────────────────
+    // -- ADMIN unlock --------------------------------------
     window.agUnlock = function(){
       var v = document.getElementById('ag-pass').value;
       if(v === PASS){
         agAdmin = true;
         document.getElementById('ag-locked-msg').style.display = 'none';
         document.getElementById('ag-admin-content').style.display = 'block';
-        document.getElementById('ag-lock-area').innerHTML = '<span style="font-size:0.75rem;color:#7de0a8">✓ Sesión activa</span>';
+        document.getElementById('ag-lock-area').innerHTML = '<span style="font-size:0.75rem;color:#7de0a8">OK Sesión activa</span>';
         agRenderInternal();
       } else {
         var p = document.getElementById('ag-pass');
@@ -2159,7 +2147,7 @@ document.querySelectorAll('a[href^="#"]').forEach(a=>{
       }
     };
 
-    // ── ADMIN filtros ─────────────────────────────────────
+    // -- ADMIN filtros -------------------------------------
     window.agFilter = function(f, btn){
       agFiltro = f;
       var filters = document.querySelectorAll('.ag-filter');
@@ -2168,7 +2156,7 @@ document.querySelectorAll('a[href^="#"]').forEach(a=>{
       agRenderInternal();
     };
 
-    // ── ADMIN render ──────────────────────────────────────
+    // -- ADMIN render --------------------------------------
     function agRenderInternal(){
       var cards = document.getElementById('ag-cards');
       if(!cards) return;
@@ -2207,7 +2195,7 @@ document.querySelectorAll('a[href^="#"]').forEach(a=>{
 
       cards.innerHTML = '';
       if(!list.length){
-        cards.innerHTML = '<div class="ag-empty">📋 No hay turnos para mostrar.</div>';
+        cards.innerHTML = '<div class="ag-empty">No hay turnos para mostrar.</div>';
         return;
       }
 
@@ -2224,9 +2212,9 @@ document.querySelectorAll('a[href^="#"]').forEach(a=>{
           '<div>' +
             '<div class="ag-card-fecha">' + fdStr + '</div>' +
             '<div class="ag-card-svc">' + t.servicio + '</div>' +
-            '<div class="ag-card-client">👤 ' + t.nombre + ' &nbsp;·&nbsp; 📱 ' + t.telefono + '</div>' +
-            (t.notas ? '<div class="ag-card-client" style="margin-top:3px;font-style:italic">💬 ' + t.notas + '</div>' : '') +
-            '<button class="ag-btn-cancel" onclick="agCancelar(\'' + t.id + '\')">✕ Cancelar</button>' +
+            '<div class="ag-card-client">' + t.nombre + ' &nbsp;.&nbsp; ' + t.telefono + '</div>' +
+            (t.notas ? '<div class="ag-card-client" style="margin-top:3px;font-style:italic">Nota: ' + t.notas + '</div>' : '') +
+            '<button class="ag-btn-cancel" onclick="agCancelar(\'' + t.id + '\')">Cancelar</button>' +
           '</div>' +
           '<div>' +
             '<div class="ag-card-hora">' + t.hora + '</div>' +
@@ -2238,7 +2226,7 @@ document.querySelectorAll('a[href^="#"]').forEach(a=>{
     }
     window.agRender = agRenderInternal;
 
-    // ── ADMIN cancelar ────────────────────────────────────
+    // -- ADMIN cancelar ------------------------------------
     window.agCancelar = function(id){
       if(!confirm('¿Cancelar este turno?')) return;
       var all = loadTurnos();
@@ -2250,71 +2238,77 @@ document.querySelectorAll('a[href^="#"]').forEach(a=>{
     };
 
 
-    // ── DESCARGAR EXCEL (CSV) con todos los turnos ───────────
     function descargarExcel(turnos){
       var activos = [];
       for(var i=0;i<turnos.length;i++){
         if(turnos[i].estado !== 'cancelado') activos.push(turnos[i]);
       }
-      activos.sort(function(a,b){ return (a.fecha+a.hora).localeCompare(b.fecha+b.hora); });
-
-      var BOM = '';
-      var csv = 'FECHA;HORA;NOMBRE;TELEFONO;SERVICIO;NOTAS
-';
-      var diasN  = ['Dom','Lun','Mar','Mie','Jue','Vie','Sab'];
-
+      activos.sort(function(a,b){
+        return (a.fecha+a.hora).localeCompare(b.fecha+b.hora);
+      });
+      var diasN = ['Dom','Lun','Mar','Mie','Jue','Vie','Sab'];
+      var rows = ['FECHA;HORA;NOMBRE;TELEFONO;SERVICIO;NOTAS'];
       for(var j=0;j<activos.length;j++){
         var t = activos[j];
         var d = new Date(t.fecha + 'T12:00:00');
-        var fechaFmt = diasN[d.getDay()] + ' ' + d.getDate() + '/' + (d.getMonth()+1) + '/' + d.getFullYear();
-        var notas2 = (t.notas || '').replace(/;/g,',').replace(/"/g,"'");
-        csv += '"'+fechaFmt+'";'+
-               '"'+t.hora+'hs";'+
-               '"'+t.nombre+'";'+
-               '"'+t.telefono+'";'+
-               '"'+t.servicio+'";'+
-               '"'+notas2+'"
-';
+        var fd = diasN[d.getDay()] + ' ' + d.getDate() + '/' + (d.getMonth()+1) + '/' + d.getFullYear();
+        var notas2 = (t.notas||'').replace(/;/g,',').replace(/"/g,"'");
+        rows.push('"'+fd+'";"'+t.hora+'hs";"'+t.nombre+'";"'+t.telefono+'";"'+t.servicio+'";"'+notas2+'"');
       }
-
+      var csv = rows.join('\n');
       var blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
-      var url  = URL.createObjectURL(blob);
-      var link = document.createElement('a');
-      link.href = url;
-      link.download = 'Turnos_Cecilia_Sangari.csv';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = url;
+      a.download = 'Turnos_Cecilia_Sangari.csv';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
       URL.revokeObjectURL(url);
     }
-    window.descargarExcelManual = function(){ descargarExcel(loadTurnos()); };
+
+
+    //  Google Sheets: pegar URL del Apps Script aqui 
+    var DRIVE_URL = 'https://script.google.com/macros/s/AKfycbw0Io2EbRgpBRrCWuXAuNX-yYUXBLpTZo7EpAVN7fwquQ4E9aUJJpoCwmLVW1-t1-tBDg/exec';
+    function enviarADrive(nombre, telefono, servicio, fecha, hora, notas){
+      if(!DRIVE_URL || DRIVE_URL === 'PEGAR_URL_AQUI') return;
+      try {
+        var datos = JSON.stringify({
+          nombre:nombre, telefono:telefono,
+          servicio:servicio, fecha:fecha,
+          hora:hora, notas:notas||'-'
+        });
+        fetch(DRIVE_URL, {
+          method:'POST', mode:'no-cors',
+          headers:{'Content-Type':'application/json'},
+          body:datos
+        });
+      } catch(e){ console.warn('Sheets error:', e); }
+    }
 
   })();
 
-    // ── Abrir agenda y opcionalmente pre-seleccionar servicio ──
+    // Abrir agenda
   function abrirAgenda(servicio){
-    // Scroll suave a la sección
-    const sec = document.getElementById('agenda');
+    var sec = document.getElementById('agenda');
     if(sec) sec.scrollIntoView({behavior:'smooth', block:'start'});
-    // Asegurar que la tab "cliente" esté activa
     setTimeout(function(){
-      const tabs = document.querySelectorAll('.ag-tab');
+      var tabs = document.querySelectorAll('.ag-tab');
       if(tabs[0]) tabs[0].click();
-      // Pre-seleccionar servicio si viene uno
       if(servicio){
-        const sel = document.getElementById('ag-servicio');
+        var sel = document.getElementById('ag-servicio');
         if(sel){
-          for(let i=0; i<sel.options.length; i++){
+          for(var i=0; i<sel.options.length; i++){
             if(sel.options[i].text === servicio){ sel.selectedIndex=i; break; }
           }
         }
-        // Foco en el campo nombre
         setTimeout(function(){
-          const n=document.getElementById('ag-nombre'); if(n) n.focus();
+          var n=document.getElementById('ag-nombre'); if(n) n.focus();
         }, 600);
       }
     }, 400);
   }
+
 
 </script>
 </body>
