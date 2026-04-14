@@ -2268,22 +2268,19 @@ document.querySelectorAll('a[href^="#"]').forEach(a=>{
     }
 
 
-    //  Google Sheets: pegar URL del Apps Script aqui 
-    var DRIVE_URL = 'https://script.google.com/macros/s/AKfycbw0Io2EbRgpBRrCWuXAuNX-yYUXBLpTZo7EpAVN7fwquQ4E9aUJJpoCwmLVW1-t1-tBDg/exec';
+    // Google Sheets via GET (evita CORS)
+    var DRIVE_URL = 'https://script.google.com/macros/s/AKfycbwDLyztowqNBwRSKcRAlHMjUj9OMNIrPu1wRcR_U1NnwhqsFzkvGVH5zm0bXRmm3j6DDg/exec';
     function enviarADrive(nombre, telefono, servicio, fecha, hora, notas){
-      if(!DRIVE_URL || DRIVE_URL === 'PEGAR_URL_AQUI') return;
       try {
-        var datos = JSON.stringify({
-          nombre:nombre, telefono:telefono,
-          servicio:servicio, fecha:fecha,
-          hora:hora, notas:notas||'-'
-        });
-        fetch(DRIVE_URL, {
-          method:'POST', mode:'no-cors',
-          headers:{'Content-Type':'application/json'},
-          body:datos
-        });
-      } catch(e){ console.warn('Sheets error:', e); }
+        var p = '?nombre=' + encodeURIComponent(nombre) +
+                '&telefono=' + encodeURIComponent(telefono) +
+                '&servicio=' + encodeURIComponent(servicio) +
+                '&fecha=' + encodeURIComponent(fecha) +
+                '&hora=' + encodeURIComponent(hora) +
+                '&notas=' + encodeURIComponent(notas||'-');
+        var img = new Image();
+        img.src = DRIVE_URL + p;
+      } catch(e){ console.warn('Sheets:', e); }
     }
 
   })();
