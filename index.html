@@ -2090,11 +2090,14 @@ document.querySelectorAll('a[href^="#"]').forEach(a=>{
       turnos.push(turno);
       saveTurnos(turnos);
 
-      // Formatear fecha
+      // Formatear fecha primero
       var fechaObj = new Date(fecha + 'T12:00:00');
       var dias  = ['domingo','lunes','martes','miercoles','jueves','viernes','sábado'];
       var meses = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
       var fd = dias[fechaObj.getDay()] + ' ' + fechaObj.getDate() + ' de ' + meses[fechaObj.getMonth()];
+
+      // Enviar a Google Sheets
+      enviarADrive(nombre, telefono, servicio, fd, horaConfirmada, notas||'-');
 
       // Mostrar confirmación con botón WA
       var msg = 'Hola Cecilia! Quiero reservar un turno\n\n' +
