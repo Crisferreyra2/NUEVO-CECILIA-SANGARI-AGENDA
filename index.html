@@ -2092,11 +2092,12 @@ document.querySelectorAll('a[href^="#"]').forEach(a=>{
 
       // Formatear fecha primero
       var fechaObj = new Date(fecha + 'T12:00:00');
-      var dias  = ['domingo','lunes','martes','miercoles','jueves','viernes','sábado'];
+      var dias  = ['domingo','lunes','martes','miercoles','jueves','viernes','sabado'];
       var meses = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
       var fd = dias[fechaObj.getDay()] + ' ' + fechaObj.getDate() + ' de ' + meses[fechaObj.getMonth()];
 
       // Enviar a Google Sheets
+      console.log('Enviando a Sheets:', nombre, fd, horaConfirmada);
       enviarADrive(nombre, telefono, servicio, fd, horaConfirmada, notas||'-');
 
       // Mostrar confirmación con botón WA
@@ -2271,19 +2272,31 @@ document.querySelectorAll('a[href^="#"]').forEach(a=>{
     }
 
 
-    // Google Sheets via GET (evita CORS)
+    // Google Sheets via iframe oculto (evita CORS/CORB completamente)
     var DRIVE_URL = 'https://script.google.com/macros/s/AKfycbwDLyztowqNBwRSKcRAlHMjUj9OMNIrPu1wRcR_U1NnwhqsFzkvGVH5zm0bXRmm3j6DDg/exec';
     function enviarADrive(nombre, telefono, servicio, fecha, hora, notas){
       try {
-        var p = '?nombre=' + encodeURIComponent(nombre) +
-                '&telefono=' + encodeURIComponent(telefono) +
-                '&servicio=' + encodeURIComponent(servicio) +
-                '&fecha=' + encodeURIComponent(fecha) +
-                '&hora=' + encodeURIComponent(hora) +
-                '&notas=' + encodeURIComponent(notas||'-');
-        var img = new Image();
-        img.src = DRIVE_URL + p;
-      } catch(e){ console.warn('Sheets:', e); }
+        var url = DRIVE_URL +
+          '?nombre='   + encodeURIComponent(nombre)   +
+          '&telefono=' + encodeURIComponent(telefono) +
+          '&servicio=' + encodeURIComponent(servicio) +
+          '&fecha='    + encodeURIComponent(fecha)    +
+          '&hora='     + encodeURIComponent(hora)     +
+          '&notas='    + encodeURIComponent(notas||'-');
+
+        // Usar iframe oculto: no genera errores CORS ni CORB
+        var iframe = document.createElement('iframe');
+        iframe.style.display = 'none';
+        iframe.src = url;
+        document.body.appendChild(iframe);
+        // Remover despues de 10 segundos
+        setTimeout(function(){ 
+          if(iframe.parentNode) iframe.parentNode.removeChild(iframe); 
+        }, 10000);
+        console.log('Turno enviado a Sheets OK:', nombre, fecha, hora);
+      } catch(e){ 
+        console.warn('Sheets error:', e); 
+      }
     }
 
   })();
